@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chanoyu — 地方財政の熟議広場</title>
+  <style>
+    :root {
+      --bg:       #F4EFE6;
+      --surface:  #FDFAF5;
+      --border:   #D6CCBA;
+      --green-dk: #2B4A2D;
+      --green-md: #4E7A51;
+      --green-lt: #8FB491;
+      --gold:     #A07C3A;
+      --red:      #B84040;
+      --text:     #1E1E1E;
+      --text-sub: #666050;
+      --radius:   10px;
+      --shadow:   0 2px 12px rgba(0,0,0,.08);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ───── NAV ───── */
+    nav {
+      background: var(--green-dk);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      height: 56px;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .logo { font-size: 1.25rem; font-weight: 700; letter-spacing: .08em; }
+    .logo span { color: var(--green-lt); font-size: .7rem; display: block; font-weight: 400; letter-spacing: .12em; }
+    .nav-right { display: flex; gap: 12px; align-items: center; }
+    .badge-level {
+      background: var(--gold); color: #fff; font-size: .7rem;
+      padding: 3px 10px; border-radius: 20px; font-weight: 700;
+    }
+    .btn-sm {
+      background: transparent; border: 1px solid rgba(255,255,255,.4);
+      color: #fff; padding: 5px 14px; border-radius: 6px; cursor: pointer;
+      font-size: .8rem; transition: background .2s;
+    }
+    .btn-sm:hover { background: rgba(255,255,255,.1); }
+
+    /* ───── PAGES ───── */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ───── LANDING ───── */
+    #page-landing {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      min-height: calc(100vh - 56px);
+      padding: 48px 24px; text-align: center;
+    }
+    .landing-icon { font-size: 3.5rem; margin-bottom: 16px; }
+    .landing-title { font-size: 2rem; font-weight: 700; color: var(--green-dk); margin-bottom: 8px; }
+    .landing-sub { color: var(--text-sub); font-size: .95rem; max-width: 460px; line-height: 1.8; margin-bottom: 32px; }
+    .principles {
+      display: flex; gap: 16px; margin-bottom: 40px; flex-wrap: wrap; justify-content: center;
+    }
+    .principle {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px 20px; max-width: 200px; text-align: left;
+    }
+    .principle .icon { font-size: 1.4rem; margin-bottom: 8px; }
+    .principle h4 { font-size: .85rem; color: var(--green-dk); font-weight: 700; margin-bottom: 4px; }
+    .principle p { font-size: .75rem; color: var(--text-sub); line-height: 1.6; }
+    .btn-primary {
+      background: var(--green-dk); color: #fff;
+      border: none; padding: 14px 36px; border-radius: 8px;
+      font-size: 1rem; font-weight: 700; cursor: pointer;
+      transition: background .2s, transform .1s;
+    }
+    .btn-primary:hover { background: var(--green-md); transform: translateY(-1px); }
+
+    /* ───── QUIZ ───── */
+    #page-quiz {
+      max-width: 640px; margin: 0 auto;
+      padding: 40px 24px;
+    }
+    .quiz-header { margin-bottom: 32px; }
+    .quiz-header h2 { font-size: 1.3rem; color: var(--green-dk); margin-bottom: 6px; }
+    .quiz-header p { color: var(--text-sub); font-size: .85rem; line-height: 1.7; }
+    .progress-bar {
+      height: 6px; background: var(--border); border-radius: 3px; margin-bottom: 28px; overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%; background: var(--green-md); border-radius: 3px;
+      transition: width .4s ease;
+    }
+    .quiz-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 28px; box-shadow: var(--shadow);
+    }
+    .quiz-q-num { font-size: .75rem; color: var(--text-sub); margin-bottom: 10px; }
+    .quiz-q-text { font-size: 1rem; font-weight: 600; line-height: 1.7; margin-bottom: 24px; }
+    .quiz-choices { display: flex; flex-direction: column; gap: 10px; }
+    .quiz-choice {
+      background: var(--bg); border: 1.5px solid var(--border);
+      border-radius: 8px; padding: 12px 16px; cursor: pointer;
+      font-size: .9rem; text-align: left; transition: border-color .15s, background .15s;
+    }
+    .quiz-choice:hover { border-color: var(--green-md); background: #EDF3EE; }
+    .quiz-choice.correct { border-color: var(--green-md); background: #EDF3EE; }
+    .quiz-choice.wrong { border-color: var(--red); background: #FDEAEA; }
+    .quiz-feedback {
+      margin-top: 16px; padding: 12px 16px; border-radius: 8px;
+      font-size: .85rem; line-height: 1.6; display: none;
+    }
+    .quiz-feedback.show { display: block; }
+    .quiz-feedback.ok { background: #EDF3EE; color: var(--green-dk); border: 1px solid var(--green-lt); }
+    .quiz-feedback.ng { background: #FDEAEA; color: var(--red); border: 1px solid #f5b8b8; }
+    .quiz-next {
+      margin-top: 20px; width: 100%;
+      background: var(--green-dk); color: #fff;
+      border: none; padding: 12px; border-radius: 8px;
+      font-size: .95rem; font-weight: 700; cursor: pointer;
+      display: none; transition: background .2s;
+    }
+    .quiz-next.show { display: block; }
+    .quiz-next:hover { background: var(--green-md); }
+
+    /* ───── RESULT ───── */
+    #page-result {
+      max-width: 540px; margin: 0 auto;
+      padding: 60px 24px; text-align: center;
+    }
+    .result-icon { font-size: 3rem; margin-bottom: 16px; }
+    .result-title { font-size: 1.5rem; font-weight: 700; color: var(--green-dk); margin-bottom: 8px; }
+    .result-sub { color: var(--text-sub); font-size: .9rem; line-height: 1.8; margin-bottom: 24px; }
+    .result-score {
+      font-size: 2.5rem; font-weight: 700; color: var(--gold);
+      margin-bottom: 8px;
+    }
+    .level-badge {
+      display: inline-block; background: var(--gold); color: #fff;
+      padding: 6px 20px; border-radius: 20px; font-weight: 700;
+      font-size: .9rem; margin-bottom: 28px;
+    }
+
+    /* ───── FEED ───── */
+    #page-feed {
+      max-width: 720px; margin: 0 auto;
+      padding: 32px 24px;
+    }
+    .feed-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .feed-header h2 { font-size: 1.1rem; color: var(--green-dk); font-weight: 700; }
+    .btn-post {
+      background: var(--green-dk); color: #fff;
+      border: none; padding: 10px 20px; border-radius: 8px;
+      font-size: .85rem; font-weight: 700; cursor: pointer;
+      transition: background .2s;
+    }
+    .btn-post:hover { background: var(--green-md); }
+
+    /* Post composer */
+    .composer {
+      background: var(--surface); border: 1.5px solid var(--green-lt);
+      border-radius: var(--radius); padding: 20px; margin-bottom: 28px;
+      box-shadow: var(--shadow); display: none;
+    }
+    .composer.open { display: block; }
+    .composer label { font-size: .8rem; color: var(--text-sub); display: block; margin-bottom: 6px; }
+    .composer textarea {
+      width: 100%; border: 1.5px solid var(--border); border-radius: 8px;
+      padding: 12px; font-size: .95rem; line-height: 1.7; resize: vertical;
+      font-family: inherit; background: var(--bg); min-height: 90px;
+    }
+    .composer textarea:focus { outline: none; border-color: var(--green-md); }
+    .composer-hint {
+      font-size: .75rem; color: var(--text-sub); margin-top: 6px; margin-bottom: 14px;
+    }
+    .composer-hint.warn { color: var(--red); }
+    .composer-actions { display: flex; gap: 10px; justify-content: flex-end; }
+    .btn-cancel {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--text-sub); padding: 8px 18px; border-radius: 6px;
+      cursor: pointer; font-size: .85rem;
+    }
+    .btn-submit {
+      background: var(--green-dk); color: #fff;
+      border: none; padding: 8px 20px; border-radius: 6px;
+      font-size: .85rem; font-weight: 700; cursor: pointer;
+      transition: background .2s;
+    }
+    .btn-submit:hover { background: var(--green-md); }
+    .btn-submit:disabled { background: var(--border); cursor: not-allowed; }
+
+    /* Post cards */
+    .post-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 22px;
+      margin-bottom: 18px; box-shadow: var(--shadow);
+      animation: fadeIn .3s ease;
+    }
+    @keyframes fadeIn { from { opacity:0; transform: translateY(6px); } to { opacity:1; transform:none; } }
+    .post-meta {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+    }
+    .avatar {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: var(--green-md); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .75rem; font-weight: 700; flex-shrink: 0;
+    }
+    .post-author { font-size: .8rem; font-weight: 600; }
+    .post-level {
+      font-size: .65rem; background: var(--gold); color: #fff;
+      padding: 2px 8px; border-radius: 10px; font-weight: 700;
+    }
+    .post-time { font-size: .7rem; color: var(--text-sub); margin-left: auto; }
+    .post-q {
+      font-size: 1rem; font-weight: 600; line-height: 1.75;
+      color: var(--text); margin-bottom: 16px;
+    }
+    .post-q::before { content: "Q. "; color: var(--green-md); }
+
+    /* Opposing view */
+    .opposing-toggle {
+      background: none; border: 1px dashed var(--border);
+      border-radius: 8px; width: 100%; padding: 10px 14px;
+      text-align: left; cursor: pointer; color: var(--text-sub);
+      font-size: .8rem; display: flex; align-items: center; gap: 8px;
+      transition: border-color .2s, background .2s; margin-bottom: 14px;
+    }
+    .opposing-toggle:hover { border-color: var(--red); background: #FEF7F7; color: var(--red); }
+    .opposing-toggle .ot-icon { font-size: 1rem; }
+    .opposing-box {
+      display: none; background: #FEF7F7;
+      border: 1px solid #f5b8b8; border-radius: 8px;
+      padding: 14px 16px; margin-bottom: 14px;
+      font-size: .85rem; line-height: 1.7; color: #5a2a2a;
+    }
+    .opposing-box.open { display: block; animation: fadeIn .25s ease; }
+    .opposing-box strong { color: var(--red); display: block; margin-bottom: 4px; font-size: .75rem; }
+
+    /* Actions */
+    .post-actions {
+      display: flex; align-items: center; gap: 12px; border-top: 1px solid var(--border);
+      padding-top: 14px; margin-top: 2px;
+    }
+    .btn-hakken {
+      display: flex; align-items: center; gap: 6px;
+      background: none; border: 1.5px solid var(--border);
+      border-radius: 20px; padding: 6px 16px; cursor: pointer;
+      font-size: .8rem; color: var(--text-sub); transition: all .2s;
+    }
+    .btn-hakken:hover { border-color: var(--gold); color: var(--gold); background: #FBF6EC; }
+    .btn-hakken.active { border-color: var(--gold); color: var(--gold); background: #FBF6EC; }
+    .btn-hakken .hk-count { font-weight: 700; }
+    .btn-reply {
+      display: flex; align-items: center; gap: 6px;
+      background: none; border: none; cursor: pointer;
+      font-size: .8rem; color: var(--text-sub); transition: color .2s;
+    }
+    .btn-reply:hover { color: var(--green-md); }
+
+    /* Tag */
+    .post-tag {
+      display: inline-block; background: #EDF3EE; color: var(--green-dk);
+      font-size: .7rem; padding: 2px 10px; border-radius: 10px;
+      margin-bottom: 10px; font-weight: 600;
+    }
+
+    /* Replies */
+    .replies { margin-top: 14px; border-top: 1px solid var(--border); padding-top: 14px; }
+    .reply-item {
+      display: flex; gap: 10px; margin-bottom: 12px; font-size: .85rem;
+      line-height: 1.6;
+    }
+    .reply-avatar {
+      width: 26px; height: 26px; border-radius: 50%;
+      background: var(--green-lt); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .65rem; font-weight: 700; flex-shrink: 0;
+    }
+    .reply-body { color: var(--text); }
+    .reply-body .reply-meta { font-size: .7rem; color: var(--text-sub); margin-bottom: 2px; }
+
+    /* Sidebar hint */
+    .feed-layout { display: flex; gap: 24px; }
+    .feed-main { flex: 1; min-width: 0; }
+    .feed-side { width: 240px; flex-shrink: 0; }
+    @media (max-width: 680px) { .feed-side { display: none; } }
+    .side-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px; margin-bottom: 16px;
+      font-size: .8rem;
+    }
+    .side-card h4 { font-size: .85rem; color: var(--green-dk); font-weight: 700; margin-bottom: 10px; }
+    .side-card p { color: var(--text-sub); line-height: 1.7; }
+    .vocab-item { margin-bottom: 8px; }
+    .vocab-item dt { font-weight: 700; color: var(--text); margin-bottom: 2px; }
+    .vocab-item dd { color: var(--text-sub); line-height: 1.5; margin-left: 0; }
+    .trend-item {
+      padding: 6px 0; border-bottom: 1px solid var(--border);
+      cursor: pointer; color: var(--green-dk); font-weight: 600;
+    }
+    .trend-item:last-child { border: none; }
+    .trend-item span { color: var(--text-sub); font-weight: 400; }
+
+    /* Toast */
+    #toast {
+      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(60px);
+      background: var(--green-dk); color: #fff;
+      padding: 12px 24px; border-radius: 8px; font-size: .9rem;
+      opacity: 0; transition: all .3s ease; pointer-events: none; z-index: 200;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">
+    Chanoyu
+    <span>地方財政の熟議広場</span>
+  </div>
+  <div class="nav-right" id="nav-right" style="display:none">
+    <span class="badge-level" id="nav-level">Lv.1 茶人見習い</span>
+    <button class="btn-sm" onclick="showPage('feed')">広場へ</button>
+  </div>
+</nav>
+
+<!-- LANDING -->
+<div id="page-landing" class="page active">
+  <div class="landing-icon">🍵</div>
+  <div class="landing-title">Chanoyu</div>
+  <p class="landing-sub">
+    地方財政について、<strong>問いを立てる</strong>ことで熟議を深める広場です。<br>
+    発言前に基礎知識を確認し、対話の質を守ります。
+  </p>
+  <div class="principles">
+    <div class="principle">
+      <div class="icon">📚</div>
+      <h4>知識ゲート</h4>
+      <p>ミニテストに合格した人だけが発言できます</p>
+    </div>
+    <div class="principle">
+      <div class="icon">❓</div>
+      <h4>問いのみ発言</h4>
+      <p>断言ではなく、問いを立てることで対話が生まれます</p>
+    </div>
+    <div class="principle">
+      <div class="icon">🔄</div>
+      <h4>対極を見る</h4>
+      <p>自分と逆の視点が自動的に表示されます</p>
+    </div>
+    <div class="principle">
+      <div class="icon">💡</div>
+      <h4>発見ボタン</h4>
+      <p>「いいね」ではなく「新しい視点を発見した」を示します</p>
+    </div>
+  </div>
+  <button class="btn-primary" onclick="showPage('quiz')">知識チェックを始める →</button>
+</div>
+
+<!-- QUIZ -->
+<div id="page-quiz" class="page">
+  <div class="quiz-header">
+    <h2>📖 地方財政 基礎知識チェック</h2>
+    <p>全5問に答えて、発言資格を取得しましょう。3問以上正解で合格です。</p>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="quiz-progress" style="width:0%"></div></div>
+  <div class="quiz-card" id="quiz-card">
+    <div class="quiz-q-num" id="quiz-qnum"></div>
+    <div class="quiz-q-text" id="quiz-qtext"></div>
+    <div class="quiz-choices" id="quiz-choices"></div>
+    <div class="quiz-feedback" id="quiz-feedback"></div>
+    <button class="quiz-next" id="quiz-next" onclick="nextQuestion()">次の問いへ →</button>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div id="page-result" class="page">
+  <div class="result-icon" id="result-icon">🎉</div>
+  <div class="result-score" id="result-score"></div>
+  <div class="result-title" id="result-title"></div>
+  <div class="result-sub" id="result-sub"></div>
+  <div class="level-badge" id="result-badge"></div><br><br>
+  <button class="btn-primary" id="result-btn" onclick="showPage('feed')">広場へ入る →</button>
+</div>
+
+<!-- FEED -->
+<div id="page-feed" class="page">
+  <div class="feed-header">
+    <h2>問いの広場</h2>
+    <button class="btn-post" onclick="toggleComposer()">＋ 問いを立てる</button>
+  </div>
+
+  <!-- Composer -->
+  <div class="composer" id="composer">
+    <label>あなたの「問い」を立てる</label>
+    <textarea id="compose-text" placeholder="例：地方交付税の算定式は、本当に地域の実態を反映しているのだろうか？" oninput="checkCompose()"></textarea>
+    <div class="composer-hint" id="compose-hint">問いの形（〜だろうか？/ 〜ではないか？/ 〜と言えるのか？）で書いてください</div>
+    <div class="composer-actions">
+      <button class="btn-cancel" onclick="toggleComposer()">キャンセル</button>
+      <button class="btn-submit" id="compose-submit" disabled onclick="submitPost()">投稿する</button>
+    </div>
+  </div>
+
+  <div class="feed-layout">
+    <div class="feed-main" id="feed-main">
+      <!-- posts injected here -->
+    </div>
+    <div class="feed-side">
+      <div class="side-card">
+        <h4>🔥 今週のテーマ</h4>
+        <div class="trend-item">地方交付税の見直し <span>23問</span></div>
+        <div class="trend-item">固定資産税の課税自主権 <span>17問</span></div>
+        <div class="trend-item">ふるさと納税の帰着 <span>14問</span></div>
+        <div class="trend-item">起債制限と財政健全化 <span>9問</span></div>
+      </div>
+      <div class="side-card">
+        <h4>📚 用語メモ</h4>
+        <dl>
+          <div class="vocab-item">
+            <dt>地方交付税</dt>
+            <dd>国が地方に配分する財源調整・保障の交付金</dd>
+          </div>
+          <div class="vocab-item">
+            <dt>標準財政規模</dt>
+            <dd>地方団体の標準的な税収等を示す指標</dd>
+          </div>
+          <div class="vocab-item">
+            <dt>財政力指数</dt>
+            <dd>基準財政収入額÷基準財政需要額。1未満は交付団体</dd>
+          </div>
+        </dl>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ────────────────────────────────────────
+// STATE
+// ────────────────────────────────────────
+let currentQ = 0;
+let score = 0;
+let answered = false;
+let userLevel = 1;
+let userLevelName = "茶人見習い";
+
+// ────────────────────────────────────────
+// QUIZ DATA
+// ────────────────────────────────────────
+const questions = [
+  {
+    q: "地方交付税の原資とならない税目はどれか？",
+    choices: ["所得税", "法人税", "消費税", "固定資産税"],
+    answer: 3,
+    feedback: "地方交付税の原資は、所得税・法人税・酒税・消費税・地方法人税の5税です。固定資産税は地方税であり、交付税の原資にはなりません。"
+  },
+  {
+    q: "財政力指数が「1」を超える地方団体について正しい説明はどれか？",
+    choices: [
+      "国から地方交付税を受け取る「交付団体」",
+      "地方交付税を受け取らない「不交付団体」",
+      "財政再生計画の策定が義務付けられる",
+      "地方債の発行が禁止される"
+    ],
+    answer: 1,
+    feedback: "財政力指数が1を超えると基準財政収入額が需要額を上回るため、普通交付税は交付されず「不交付団体」となります。東京都などが該当します。"
+  },
+  {
+    q: "ふるさと納税の返礼品競争が問題視される理由として最も適切なものはどれか？",
+    choices: [
+      "返礼品の郵送コストが財政を圧迫するから",
+      "寄附者の住む自治体から税収が流出し地域間の財政格差を拡大するから",
+      "返礼品の品質が保証されないから",
+      "インターネット申込が高齢者に不利だから"
+    ],
+    answer: 1,
+    feedback: "ふるさと納税で控除が適用されると、寄附者が居住する自治体の個人住民税が減少します。自治体間の税収移転が起き、特に都市部の財政に影響が出るとされています。"
+  },
+  {
+    q: "地方財政健全化法における「財政再生団体」の認定基準に用いる指標はどれか？",
+    choices: [
+      "実質赤字比率・連結実質赤字比率・実質公債費比率・将来負担比率",
+      "プライマリーバランス・基礎的財政収支・債務残高対GDP比",
+      "経常収支比率・義務的経費比率・人件費比率",
+      "財政力指数・起債制限比率・経常収支比率"
+    ],
+    answer: 0,
+    feedback: "地方財政健全化法では4つの指標（実質赤字比率・連結実質赤字比率・実質公債費比率・将来負担比率）で早期健全化・財政再生の段階を判断します。"
+  },
+  {
+    q: "「三位一体の改革」（2004〜2006年）で行われたこととして正しいものはどれか？",
+    choices: [
+      "消費税を地方税へ全面移譲した",
+      "国庫補助負担金の廃止・縮減、地方交付税の見直し、税源移譲を一体的に実施した",
+      "道州制を導入し都道府県を廃止した",
+      "地方創生交付金を新設して都市部の財政を支援した"
+    ],
+    answer: 1,
+    feedback: "三位一体の改革は、①国庫補助負担金の削減 ②地方交付税総額の抑制 ③3兆円規模の税源移譲（所得税→住民税）を同時に進めた改革です。地方分権推進の一環でしたが、地方財政への影響は賛否両論があります。"
+  }
+];
+
+// ────────────────────────────────────────
+// QUIZ LOGIC
+// ────────────────────────────────────────
+function renderQuestion() {
+  const q = questions[currentQ];
+  document.getElementById('quiz-qnum').textContent = `問 ${currentQ + 1} / ${questions.length}`;
+  document.getElementById('quiz-qtext').textContent = q.q;
+  document.getElementById('quiz-progress').style.width = `${(currentQ / questions.length) * 100}%`;
+  const fb = document.getElementById('quiz-feedback');
+  fb.className = 'quiz-feedback';
+  fb.textContent = '';
+  document.getElementById('quiz-next').className = 'quiz-next';
+  answered = false;
+
+  const choicesEl = document.getElementById('quiz-choices');
+  choicesEl.innerHTML = '';
+  q.choices.forEach((c, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'quiz-choice';
+    btn.textContent = c;
+    btn.onclick = () => selectAnswer(i);
+    choicesEl.appendChild(btn);
+  });
+}
+
+function selectAnswer(idx) {
+  if (answered) return;
+  answered = true;
+  const q = questions[currentQ];
+  const choices = document.querySelectorAll('.quiz-choice');
+  const fb = document.getElementById('quiz-feedback');
+  const isCorrect = idx === q.answer;
+  if (isCorrect) score++;
+  choices[idx].classList.add(isCorrect ? 'correct' : 'wrong');
+  if (!isCorrect) choices[q.answer].classList.add('correct');
+  fb.textContent = (isCorrect ? '✓ 正解！ ' : '✗ 不正解。') + q.feedback;
+  fb.className = `quiz-feedback show ${isCorrect ? 'ok' : 'ng'}`;
+  document.getElementById('quiz-next').className = 'quiz-next show';
+}
+
+function nextQuestion() {
+  currentQ++;
+  if (currentQ >= questions.length) {
+    showResult();
+  } else {
+    renderQuestion();
+  }
+}
+
+function showResult() {
+  document.getElementById('quiz-progress').style.width = '100%';
+  const pass = score >= 3;
+  document.getElementById('result-icon').textContent = pass ? '🍵' : '📖';
+  document.getElementById('result-score').textContent = `${score} / ${questions.length}`;
+
+  if (score === 5) { userLevel = 3; userLevelName = "熟練の茶人"; }
+  else if (score >= 3) { userLevel = 2; userLevelName = "茶人"; }
+  else { userLevel = 1; userLevelName = "茶人見習い"; }
+
+  document.getElementById('result-title').textContent = pass ? '合格！広場への入場が許可されました' : 'もう一度挑戦しましょう';
+  document.getElementById('result-sub').textContent = pass
+    ? `${score}問正解で発言資格を取得しました。問いを立てることで対話が始まります。`
+    : `正解は${score}問でした。3問以上で合格です。知識を深めてもう一度挑戦してください。`;
+  document.getElementById('result-badge').textContent = `Lv.${userLevel} ${userLevelName}`;
+  document.getElementById('nav-level').textContent = `Lv.${userLevel} ${userLevelName}`;
+  document.getElementById('result-btn').textContent = pass ? '広場へ入る →' : 'もう一度挑戦する';
+  document.getElementById('result-btn').onclick = pass ? () => showPage('feed') : () => { currentQ = 0; score = 0; showPage('quiz'); renderQuestion(); };
+  showPage('result');
+}
+
+// ────────────────────────────────────────
+// FEED DATA
+// ────────────────────────────────────────
+const initialPosts = [
+  {
+    id: 1,
+    author: "財政研究者A",
+    avatar: "研",
+    level: "Lv.3 熟練の茶人",
+    tag: "地方交付税",
+    time: "2時間前",
+    q: "財政力格差を是正するはずの地方交付税が、かえって自治体の行財政改革インセンティブを削いでいるのではないか？",
+    opposing: "交付税による財源保障がなければ、財政力の弱い過疎地域では最低限の住民サービスすら維持できない。競争原理を持ち込めば格差は拡大する一方だ。地方交付税は「ナショナルミニマム」を守る生命線である。",
+    hakken: 24,
+    replies: [
+      { author: "地方議員B", avatar: "議", text: "「努力した自治体が損をする」という声は現場でよく聞きます。算定方式の透明化から始めるべきでしょうか？" }
+    ]
+  },
+  {
+    id: 2,
+    author: "元自治体職員C",
+    avatar: "職",
+    level: "Lv.2 茶人",
+    tag: "ふるさと納税",
+    time: "4時間前",
+    q: "ふるさと納税は「地域を応援したい」という気持ちを制度化したものだが、実態は返礼品マーケットに過ぎないのではないか？",
+    opposing: "返礼品があるからこそ寄附が集まり、地域の生産者支援・関係人口創出につながっている。純粋な「応援」だけを求めるのは寄附文化の乏しい日本では現実的でなく、制度の裾野を広げた功績は大きい。",
+    hakken: 41,
+    replies: []
+  },
+  {
+    id: 3,
+    author: "大学院生D",
+    avatar: "院",
+    level: "Lv.2 茶人",
+    tag: "起債・財政健全化",
+    time: "昨日",
+    q: "財政健全化法の早期健全化基準は、逆に自治体が将来世代への投資（インフラ整備・教育）を躊躇させる「健全化の罠」を生んでいないか？",
+    opposing: "放漫財政を防ぐルールがなければ夕張市のような破綻が繰り返される。現役世代の安心感なしには移住・定住も促せず、将来世代への本当の投資にもならない。規律と投資のバランスこそ問われるべきだ。",
+    hakken: 18,
+    replies: [
+      { author: "財政研究者A", avatar: "研", text: "「投資」と「経費」の区別をどう制度設計するかという問いに直結しますね。" }
+    ]
+  }
+];
+
+let posts = JSON.parse(JSON.stringify(initialPosts));
+
+function renderFeed() {
+  const el = document.getElementById('feed-main');
+  el.innerHTML = '';
+  posts.forEach(p => el.appendChild(createPostCard(p)));
+}
+
+function createPostCard(p) {
+  const card = document.createElement('div');
+  card.className = 'post-card';
+  card.id = `post-${p.id}`;
+  card.innerHTML = `
+    <div class="post-meta">
+      <div class="avatar">${p.avatar}</div>
+      <div>
+        <div class="post-author">${p.author}</div>
+        <span class="post-level">${p.level}</span>
+      </div>
+      <div class="post-time">${p.time}</div>
+    </div>
+    <span class="post-tag">${p.tag}</span>
+    <div class="post-q">${p.q}</div>
+    <button class="opposing-toggle" onclick="toggleOpposing(${p.id})">
+      <span class="ot-icon">🔄</span> 対極の視点を見る（あなたと逆の立場から考えられた問い）
+    </button>
+    <div class="opposing-box" id="opp-${p.id}">
+      <strong>🟥 対極の視点</strong>
+      ${p.opposing}
+    </div>
+    <div class="post-actions">
+      <button class="btn-hakken" id="hk-${p.id}" onclick="hakken(${p.id})">
+        <span>💡</span> 発見 <span class="hk-count">${p.hakken}</span>
+      </button>
+      <button class="btn-reply" onclick="focusReply(${p.id})">
+        <span>↩</span> 関連する問いを立てる
+      </button>
+    </div>
+    ${p.replies.length > 0 ? renderReplies(p.replies) : ''}
+    <div id="reply-form-${p.id}"></div>
+  `;
+  return card;
+}
+
+function renderReplies(replies) {
+  return `<div class="replies">` +
+    replies.map(r => `
+      <div class="reply-item">
+        <div class="reply-avatar">${r.avatar}</div>
+        <div class="reply-body">
+          <div class="reply-meta">${r.author}</div>
+          ${r.text}
+        </div>
+      </div>
+    `).join('') +
+  `</div>`;
+}
+
+function toggleOpposing(id) {
+  const box = document.getElementById(`opp-${id}`);
+  box.classList.toggle('open');
+}
+
+function hakken(id) {
+  const btn = document.getElementById(`hk-${id}`);
+  if (btn.classList.contains('active')) return;
+  btn.classList.add('active');
+  const p = posts.find(x => x.id === id);
+  p.hakken++;
+  btn.querySelector('.hk-count').textContent = p.hakken;
+  showToast('💡 新しい視点を発見しました');
+}
+
+function focusReply(id) {
+  const formEl = document.getElementById(`reply-form-${id}`);
+  formEl.innerHTML = `
+    <div style="margin-top:12px">
+      <textarea id="rtext-${id}" placeholder="関連する問いを立ててください（〜だろうか？など）"
+        style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px;font-size:.85rem;font-family:inherit;background:var(--bg);resize:vertical;min-height:64px;"
+        oninput="checkReply(${id})"></textarea>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+        <button class="btn-cancel" onclick="document.getElementById('reply-form-${id}').innerHTML=''">取消</button>
+        <button class="btn-submit" id="rsub-${id}" disabled onclick="submitReply(${id})">投稿</button>
+      </div>
+    </div>
+  `;
+  document.getElementById(`rtext-${id}`).focus();
+}
+
+function checkReply(id) {
+  const val = document.getElementById(`rtext-${id}`).value.trim();
+  const isQ = /[？?]/.test(val) && val.length > 10;
+  document.getElementById(`rsub-${id}`).disabled = !isQ;
+}
+
+function submitReply(id) {
+  const val = document.getElementById(`rtext-${id}`).value.trim();
+  const p = posts.find(x => x.id === id);
+  p.replies.push({ author: `あなた (Lv.${userLevel})`, avatar: "私", text: val });
+  document.getElementById(`reply-form-${id}`).innerHTML = '';
+  const card = document.getElementById(`post-${id}`);
+  const newCard = createPostCard(p);
+  card.replaceWith(newCard);
+  showToast('問いを投稿しました');
+}
+
+// ────────────────────────────────────────
+// COMPOSER
+// ────────────────────────────────────────
+function toggleComposer() {
+  const c = document.getElementById('composer');
+  c.classList.toggle('open');
+}
+
+const QA_PATTERNS = /[？?]|(だろうか|ではないか|なのか|といえるか|べきか|のか|いのか)/;
+
+function checkCompose() {
+  const val = document.getElementById('compose-text').value.trim();
+  const hint = document.getElementById('compose-hint');
+  const isQ = QA_PATTERNS.test(val) && val.length >= 15;
+  document.getElementById('compose-submit').disabled = !isQ;
+  if (val.length > 0 && !isQ) {
+    hint.textContent = '⚠ 問いの形（〜だろうか？など）で書き、15文字以上にしてください';
+    hint.className = 'composer-hint warn';
+  } else {
+    hint.textContent = '問いの形（〜だろうか？/ 〜ではないか？/ 〜と言えるのか？）で書いてください';
+    hint.className = 'composer-hint';
+  }
+}
+
+const opposingPool = [
+  "その問いが前提としている「現状維持」のバイアスに気づいているか？変化にはコストがかかるが、変化しないコストはさらに大きい可能性がある。",
+  "地域の多様性を無視した一律の「改革」は、現場の文脈を破壊する。中央主導の最適解が必ずしも地域最適とはならない点を見落としていないか。",
+  "短期的な財政数値の改善が、長期的な地域の活力を損なう逆説を考慮しているか。数字だけでは測れない「地域の底力」こそが財政の土台である。",
+  "国と地方の役割分担を問い直す前に、現行制度の運用改善で達成できることが残っていないか検討すべきである。制度変更は常にトランジションコストを伴う。"
+];
+
+function submitPost() {
+  const val = document.getElementById('compose-text').value.trim();
+  if (!val) return;
+  const newPost = {
+    id: Date.now(),
+    author: `あなた (Lv.${userLevel})`,
+    avatar: "私",
+    level: `Lv.${userLevel} ${userLevelName}`,
+    tag: "自由議題",
+    time: "たった今",
+    q: val,
+    opposing: opposingPool[Math.floor(Math.random() * opposingPool.length)],
+    hakken: 0,
+    replies: []
+  };
+  posts.unshift(newPost);
+  document.getElementById('compose-text').value = '';
+  document.getElementById('compose-submit').disabled = true;
+  document.getElementById('composer').classList.remove('open');
+  renderFeed();
+  showToast('問いを投稿しました 🍵');
+}
+
+// ────────────────────────────────────────
+// NAVIGATION
+// ────────────────────────────────────────
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const target = document.getElementById(`page-${name}`);
+  if (target) {
+    target.classList.add('active');
+    // special: quiz needs active display:block override
+    if (name === 'quiz') target.style.display = 'block';
+    else target.style.display = '';
+  }
+  if (name === 'quiz') renderQuestion();
+  if (name === 'feed') { renderFeed(); document.getElementById('nav-right').style.display = 'flex'; }
+}
+
+// ────────────────────────────────────────
+// TOAST
+// ────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+</script>
+</body>
+</html>
